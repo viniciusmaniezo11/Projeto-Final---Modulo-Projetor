@@ -8,8 +8,10 @@
 
 void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
+void alterarEstadoPower(bool estadoPower);
 
-#define PINO_PROJETOR_IR 16
+const int PINO_PROJETOR_IR = 16;
+const int PINO_BOTAO_BOOT = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
@@ -17,19 +19,22 @@ const char TOPICO_COMANDO[] = "senai134/viniciusM/esp32/comando";
 
 void setup()
 {
-    Serial.begin(9600);
-    configurarDebug();
-    configurarMQTT();
-    conectarWiFi();
-    registrarCallbackMensagem(tratarMensagemRecebida);
-    conectarMQTT();
+  pinMode(PINO_BOTAO_BOOT, INPUT_PULLUP);
+  Serial.begin(9600);
+  configurarDebug();
+  configurarMQTT();
+  conectarWiFi();
+  registrarCallbackMensagem(tratarMensagemRecebida);
+  conectarMQTT();
+  projector.begin();
+  projector.send(EPSON_CMD_POWER);
 }
 
 void loop()
 {
-    garantirMQTTConectado();
-    garantirWiFiConectado();
-    loopMQTT();
+  garantirMQTTConectado();
+  garantirWiFiConectado();
+  loopMQTT();
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -67,5 +72,32 @@ void tratarJsonComando(const String &mensagem)
     debugErro("Erro ao interpretar o JSON.");
     debugErro(erro.c_str());
     return;
+  }
+  if(!doc["projetor"].is<JsonObject>())
+  {
+    debugErro("Erro ao interpretar o JSON.");
+    return;
+  }
+  else
+  {
+    if (doc["projetor"]["estadoProjetor"].is<bool>())
+    {
+      bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
+
+      alterarEstadoPower(estadoPower);
+    }
+  }
+}
+
+void alterarEstadoPower(bool estadoPower)
+{
+  if(estadoPower)
+  {
+    projector.send(EPSON_CMD_POWER);
+  }
+  else
+  {
+    projector.send(EPSON_CMD_POWER);
+    projector.send(EPSON_CMD_POWER);
   }
 }

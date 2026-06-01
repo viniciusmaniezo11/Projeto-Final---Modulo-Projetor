@@ -43,9 +43,9 @@ void configurarDebug()
     Serial.begin(9600);
     delay(1000);
 
-    pinMode(DEBUG_HABILITA_DEBUG_COMPLETO, INPUT_PULLUP);
+    pinMode(PINO_HABILITA_DEBUG_COMPLETO, INPUT_PULLUP);
 
-    if (digitalRead(DEBUG_HABILITA_DEBUG_COMPLETO) == LOW)
+    if (digitalRead(PINO_HABILITA_DEBUG_COMPLETO) == LOW)
     {
         nivelDebugAtual = DEBUG_TUDO;
     }
