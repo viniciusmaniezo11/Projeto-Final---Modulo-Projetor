@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <PubSubClient.h>
 #include <EpsonIR.h>
-#include <ezTime.h>
 
 #include "DebugManager.h"
 #include "MqttManager.h"
@@ -12,15 +10,13 @@ void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
 void alterarEstadoPower(bool estadoPower);
 void alterarEstadoCongela(bool estadoCongela);
-void enviarMensagemProDisplay();
-Timezone tempo;
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
-const char TOPICO_COMANDO[] = "senai134/viniciusM/esp32/comando";
+const char TOPICO_COMANDO[] = "senai134/equipe/bowser/#";
 
 void setup()
 {
@@ -31,7 +27,6 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
-  waitForSync();
 }
 
 void loop()
@@ -39,7 +34,6 @@ void loop()
   garantirMQTTConectado();
   garantirWiFiConectado();
   loopMQTT();
-  events();
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -116,17 +110,14 @@ void alterarEstadoPower(bool estadoPower)
     debugInfo("projetor desligado");
   }
 }
-
-void enviarMensagemProDisplay()
+void alterarEstadoCongela(bool estadoCongela)
 {
-  JsonDocument doc;
-  doc["timestamp"] = tempo.now();
-  doc["modulo"] = "Módulo Projetor";
-
-  char buffer[200];
-  serializeJson(doc, buffer);
-
-  Serial.print("Enviando mensagem para Tópico: ");
-  Serial.println(TOPICO_COMANDO);
-  Serial.println(buffer);
+  if (estadoCongela)
+  {
+    debugInfo("projetor congelado");
+  }
+  else
+  {
+    debugInfo("projetor descongelado");
+  }
 }

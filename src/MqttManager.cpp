@@ -112,7 +112,7 @@ void configurarMQTT()
         }
         else
         {
-            debugErro("Certificado CA do MQTT não configurandi, usando setInsecure para testes.");
+            debugErro("Certificado CA do MQTT não configurand0, usando setInsecure para testes.");
             wifiClienteSecure.setInsecure();
         }
 
