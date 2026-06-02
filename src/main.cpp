@@ -29,8 +29,6 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
-  projector.begin();
-  projector.send(EPSON_CMD_POWER);
 }
 
 void loop()
@@ -38,7 +36,6 @@ void loop()
   garantirMQTTConectado();
   garantirWiFiConectado();
   loopMQTT();
-  void tratarJsonComando(const String &mensagem);
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -70,6 +67,9 @@ void tratarJsonComando(const String &mensagem)
   JsonDocument doc;
   static bool estadoPowerAnterior = 0;
   static bool estadoCongelaAnterior = 0;
+  static bool teste = 0;
+  teste = !teste;
+  Serial.println(teste);
 
   DeserializationError erro = deserializeJson(doc, mensagem);
 
@@ -79,26 +79,21 @@ void tratarJsonComando(const String &mensagem)
     debugErro(erro.c_str());
     return;
   }
-  if (!doc["projetor"].is<JsonObject>())
+  if (doc["projetor"].is<JsonObject>())
   {
-    debugErro("Erro ao interpretar o JSON.");
-    return;
-  }
-  else
-  {
-    if (doc["projetor"]["estadoProjetor"].is<bool>())
+    if (!doc["projetor"]["estadoProjetor"].is<bool>() || !doc["projetor"]["estadoCongela"].is<bool>())
     {
-      bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
-        alterarEstadoPower(estadoPower);
+      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongela");
+      return;
     }
-    if (doc["projetor"]["estadoCongela"].is<bool>())
+    else
     {
       bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
-        debugInfo("congela");
-    }
+      bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
+      alterarEstadoPower(estadoPower);
+  }
   }
 }
-
 void alterarEstadoPower(bool estadoPower)
 {
   if (estadoPower)

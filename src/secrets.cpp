@@ -88,8 +88,8 @@ xcqcBZyxP0XYOekCkiVV+dqMnh7lVntcLDCQshH3+CPmVVTxhrFqPw==
 -----END RSA PRIVATE KEY-----
 )EOF";
 
-const char *AWS_IOT_ENDPOINT = "a242lwbu76kea4-ats.iot.us-east-1.amazonaws.com";
-
+const char *AWS_IOT_ENDPOINT = "a3cxr9ayydc4np-ats.us-east-1.amazonaws.com";
+//a3cxr9ayydc4np-ats.us-east-1.amazonaws.com
 const int AWS_IOT_PORT = 8883;
 
 //============================================================//
