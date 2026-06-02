@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 #include <EpsonIR.h>
 
 #include "DebugManager.h"
@@ -10,6 +11,7 @@ void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
 void alterarEstadoPower(bool estadoPower);
 void alterarEstadoCongela(bool estadoCongela);
+void enviarMensagemProDisplay();
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
@@ -107,4 +109,20 @@ void alterarEstadoPower(bool estadoPower)
   {
     debugInfo("projetor desligado");
   }
+}
+
+void enviarMensagemProDisplay()
+{
+  JsonDocument doc;
+  doc[""] = "Bolsonaro";
+  doc[""] = "akguma coisa";
+  doc[""][""] = "alguma coisa";
+  doc[""][""] = "alguma coisa";
+
+  char buffer[200];
+  serializeJson(doc, buffer);
+
+  Serial.print("Enviando mensagem para Tópico: ");
+  Serial.println(TOPICO_COMANDO);
+  Serial.println(buffer);
 }
