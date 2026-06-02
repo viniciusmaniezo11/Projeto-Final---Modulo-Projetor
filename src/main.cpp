@@ -88,7 +88,14 @@ void tratarJsonComando(const String &mensagem)
     {
       bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
       bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
+      
+      if(estadoPower != estadoPowerAnterior)
       alterarEstadoPower(estadoPower);
+      estadoPowerAnterior = estadoPower;
+
+      if(estadoCongela != estadoCongelaAnterior)
+      alterarEstadoCongela(estadoCongela);
+      estadoCongelaAnterior = estadoCongela;
   }
   }
 }
