@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <EpsonIR.h>
+#include <ezTime.h>
 
 #include "DebugManager.h"
 #include "MqttManager.h"
@@ -12,6 +13,7 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem);
 void alterarEstadoPower(bool estadoPower);
 void alterarEstadoCongela(bool estadoCongela);
 void enviarMensagemProDisplay();
+Timezone tempo;
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
@@ -29,6 +31,7 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
+  waitForSync();
 }
 
 void loop()
@@ -36,6 +39,7 @@ void loop()
   garantirMQTTConectado();
   garantirWiFiConectado();
   loopMQTT();
+  events();
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -109,10 +113,8 @@ void alterarEstadoPower(bool estadoPower)
 void enviarMensagemProDisplay()
 {
   JsonDocument doc;
-  doc[""] = "Bolsonaro";
-  doc[""] = "akguma coisa";
-  doc[""][""] = "alguma coisa";
-  doc[""][""] = "alguma coisa";
+  doc["timestamp"] = tempo.now();
+  doc["modulo"] = "Módulo Projetor";
 
   char buffer[200];
   serializeJson(doc, buffer);
