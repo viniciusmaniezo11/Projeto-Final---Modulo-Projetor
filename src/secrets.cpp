@@ -116,10 +116,7 @@ const char *TOPICOS_PUBLICAR[] = {
 const int TOTAL_TOPICOS_PUBLICAR = sizeof(TOPICOS_PUBLICAR) / sizeof(TOPICOS_PUBLICAR[0]);
 
 const char *TOPICOS_RECEBER[] = {
-    "senai134/equipe/bowser/#",
-    "senai134/equipe/bowser/devices/...",
-    "senai134/equipe/boser/tesste",
-    "senai134/equipe/bower/teste"};
+    "senai134/equipe/bowser/devices/…"};
 
 const int TOTAL_TOPICOS_RECEBER = sizeof(TOPICOS_RECEBER) / sizeof(TOPICOS_RECEBER[0]);
 
