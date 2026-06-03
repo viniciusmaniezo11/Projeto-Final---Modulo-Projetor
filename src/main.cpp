@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 #include <EpsonIR.h>
+#include <ezTime.h>
 
 #include "DebugManager.h"
 #include "MqttManager.h"
@@ -10,11 +12,14 @@ void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
 void alterarEstadoPower(bool estadoPower);
 void alterarEstadoCongela(bool estadoCongela);
+void enviarMensagemProDisplay();
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
+
+Timezone tempo;
 
 const char TOPICO_COMANDO[] = "senai134/equipe/bowser/#";
 
@@ -27,6 +32,10 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
+  enviarMensagemProDisplay();
+  setInterval(3600);
+  waitForSync();
+  tempo.setLocation("America/Sao_Paulo");
 }
 
 void loop()
@@ -120,4 +129,18 @@ void alterarEstadoCongela(bool estadoCongela)
   {
     debugInfo("projetor descongelado");
   }
+}
+
+void enviarMensagemProDisplay()
+{
+  JsonDocument doc;
+  doc["timestamp"] = tempo.now();
+  doc["modulo"] = "Módulo Projetor";
+
+  char buffer[200];
+  serializeJson(doc, buffer);
+
+  debugInfo("Enviando mensagem para Tópico: ");
+  debugInfo(TOPICO_COMANDO);
+  debugInfo(buffer);
 }
