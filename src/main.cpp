@@ -13,10 +13,11 @@ void alterarEstadoCongela(bool estadoCongela);
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
+bool enviarComandoPower = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
-const char TOPICO_COMANDO[] = "senai134/equipe/bowser/#";
+const char TOPICO_COMANDO[] = "senai134/equipe/bowser/devices/…";
 
 void setup()
 {
@@ -27,6 +28,7 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
+  projector.begin();
 }
 
 void loop()
@@ -34,6 +36,15 @@ void loop()
   garantirMQTTConectado();
   garantirWiFiConectado();
   loopMQTT();
+
+  if(enviarComandoPower)
+  {
+    projector.send(EPSON_CMD_POWER);
+    delay(1000);
+    projector.send(EPSON_CMD_POWER);
+    debugInfo("Projetor Ligado");
+  }
+  enviarComandoPower = 0;
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -86,13 +97,7 @@ void tratarJsonComando(const String &mensagem)
       bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
       bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
       
-      if(estadoPower != estadoPowerAnterior)
-      alterarEstadoPower(estadoPower);
-      estadoPowerAnterior = estadoPower;
-
-      if(estadoCongela != estadoCongelaAnterior)
-      alterarEstadoCongela(estadoCongela);
-      estadoCongelaAnterior = estadoCongela;
+      enviarComandoPower = estadoPower;
   }
   }
 }
@@ -101,10 +106,14 @@ void alterarEstadoPower(bool estadoPower)
   if (estadoPower)
   {
     debugInfo("projetor ligado");
+    projector.send(EPSON_CMD_POWER);
   }
   else
   {
     debugInfo("projetor desligado");
+    projector.send(EPSON_CMD_POWER);
+    delay(1000);
+    projector.send(EPSON_CMD_POWER);
   }
 }
 void alterarEstadoCongela(bool estadoCongela)
