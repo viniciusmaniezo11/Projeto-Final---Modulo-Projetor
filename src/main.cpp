@@ -16,12 +16,14 @@ void enviarMensagemProDisplay();
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
+bool enviarComandoPower = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
 Timezone tempo;
 
 const char TOPICO_COMANDO[] = "senai134/equipe/bowser/#";
+const char TOPICO_COMANDO[] = "senai134/equipe/bowser/devices/…";
 
 void setup()
 {
@@ -32,10 +34,14 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
+<<<<<<< HEAD
   enviarMensagemProDisplay();
   setInterval(3600);
   waitForSync();
   tempo.setLocation("America/Sao_Paulo");
+=======
+  projector.begin();
+>>>>>>> c918521d754435455a4ea416cb1c5b7906bcfec7
 }
 
 void loop()
@@ -43,6 +49,15 @@ void loop()
   garantirMQTTConectado();
   garantirWiFiConectado();
   loopMQTT();
+
+  if(enviarComandoPower)
+  {
+    projector.send(EPSON_CMD_POWER);
+    delay(1000);
+    projector.send(EPSON_CMD_POWER);
+    debugInfo("Projetor Ligado");
+  }
+  enviarComandoPower = 0;
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -74,9 +89,6 @@ void tratarJsonComando(const String &mensagem)
   JsonDocument doc;
   static bool estadoPowerAnterior = 0;
   static bool estadoCongelaAnterior = 0;
-  static bool teste = 0;
-  teste = !teste;
-  Serial.println(teste);
 
   DeserializationError erro = deserializeJson(doc, mensagem);
 
@@ -98,13 +110,7 @@ void tratarJsonComando(const String &mensagem)
       bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
       bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
       
-      if(estadoPower != estadoPowerAnterior)
-      alterarEstadoPower(estadoPower);
-      estadoPowerAnterior = estadoPower;
-
-      if(estadoCongela != estadoCongelaAnterior)
-      alterarEstadoCongela(estadoCongela);
-      estadoCongelaAnterior = estadoCongela;
+      enviarComandoPower = estadoPower;
   }
   }
 }
@@ -113,10 +119,14 @@ void alterarEstadoPower(bool estadoPower)
   if (estadoPower)
   {
     debugInfo("projetor ligado");
+    projector.send(EPSON_CMD_POWER);
   }
   else
   {
     debugInfo("projetor desligado");
+    projector.send(EPSON_CMD_POWER);
+    delay(1000);
+    projector.send(EPSON_CMD_POWER);
   }
 }
 void alterarEstadoCongela(bool estadoCongela)
