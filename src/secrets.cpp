@@ -14,7 +14,7 @@ const char *WIFI_SENHA = "info@134";
 
 const bool USAR_AWS_IOT = true;
 
-const char *AWS_IOT_CLIENT_ID = "esp-bowser-123";
+const char *AWS_IOT_CLIENT_ID = "bowser-123";
 
 const char AWS_CERT_CA[] PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
 MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -116,9 +116,7 @@ const char *TOPICOS_PUBLICAR[] = {
 const int TOTAL_TOPICOS_PUBLICAR = sizeof(TOPICOS_PUBLICAR) / sizeof(TOPICOS_PUBLICAR[0]);
 
 const char *TOPICOS_RECEBER[] = {
-    "senai134/equipe/bowser/#",
-    "senai134/equipe/boser/tesste",
-    "senai134/equipe/bower/teste"};
+    "senai134/equipe/bowser/devices/…"};
 
 const int TOTAL_TOPICOS_RECEBER = sizeof(TOPICOS_RECEBER) / sizeof(TOPICOS_RECEBER[0]);
 
