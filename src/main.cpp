@@ -65,9 +65,6 @@ void tratarJsonComando(const String &mensagem)
   JsonDocument doc;
   static bool estadoPowerAnterior = 0;
   static bool estadoCongelaAnterior = 0;
-  static bool teste = 0;
-  teste = !teste;
-  Serial.println(teste);
 
   DeserializationError erro = deserializeJson(doc, mensagem);
 
