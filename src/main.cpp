@@ -17,12 +17,14 @@ void enviarMensagemProDisplay();
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
 bool enviarComandoPower = 0;
+static bool enviarComandoPowerAnterior = 0;
+bool enviarComandoCongela = 0;
+static bool enviarComandoCongelaAnterior = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
 Timezone tempo;
 
-const char TOPICO_COMANDO[] = "senai134/equipe/bowser/#";
 const char TOPICO_COMANDO[] = "senai134/equipe/bowser/devices/…";
 
 void setup()
@@ -34,14 +36,11 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
-<<<<<<< HEAD
   enviarMensagemProDisplay();
   setInterval(3600);
   waitForSync();
   tempo.setLocation("America/Sao_Paulo");
-=======
   projector.begin();
->>>>>>> c918521d754435455a4ea416cb1c5b7906bcfec7
 }
 
 void loop()
@@ -50,14 +49,33 @@ void loop()
   garantirWiFiConectado();
   loopMQTT();
 
-  if(enviarComandoPower)
+  if(enviarComandoPower != enviarComandoPowerAnterior)
+   if (enviarComandoPower)
   {
+    debugInfo("projetor ligado");
+    projector.send(EPSON_CMD_POWER);
+  }
+  else
+  {
+    debugInfo("projetor desligado");
     projector.send(EPSON_CMD_POWER);
     delay(1000);
     projector.send(EPSON_CMD_POWER);
-    debugInfo("Projetor Ligado");
   }
-  enviarComandoPower = 0;
+  enviarComandoPowerAnterior = enviarComandoPower;
+
+  if(enviarComandoCongela != enviarComandoCongelaAnterior)
+  if(enviarComandoCongela)
+  {
+    debugInfo("projetor Congelado");
+    projector.send(EPSON_CMD_FREEZE);
+  }
+  else
+  {
+    debugInfo("projetor Descongelado");
+    projector.send(EPSON_CMD_FREEZE);
+  }
+  enviarComandoCongelaAnterior = enviarComandoCongela;
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -109,8 +127,9 @@ void tratarJsonComando(const String &mensagem)
     {
       bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
       bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
-      
+
       enviarComandoPower = estadoPower;
+      enviarComandoCongela = estadoCongela;
   }
   }
 }
