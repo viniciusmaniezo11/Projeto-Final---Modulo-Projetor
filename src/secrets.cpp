@@ -109,9 +109,7 @@ const bool MQTT_USAR_TLS = false; //* Modo de conexão sem segurança.
 const char MQTT_CERTIFICADO_CA[] PROGMEM = "";
 
 const char *TOPICOS_PUBLICAR[] = {
-    "senai/esp32/status",
-    "senai/esp32/log",
-    "senai/esp32/resposta"};
+    ""};
 
 const int TOTAL_TOPICOS_PUBLICAR = sizeof(TOPICOS_PUBLICAR) / sizeof(TOPICOS_PUBLICAR[0]);
 

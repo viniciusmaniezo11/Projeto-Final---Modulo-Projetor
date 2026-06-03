@@ -10,8 +10,6 @@
 
 void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
-void alterarEstadoPower(bool estadoPower);
-void alterarEstadoCongela(bool estadoCongela);
 void enviarMensagemProDisplay();
 
 const int PINO_PROJETOR_IR = 16;
@@ -26,6 +24,7 @@ EpsonIR projector(PINO_PROJETOR_IR);
 Timezone tempo;
 
 const char TOPICO_COMANDO[] = "senai134/equipe/bowser/devices/…";
+const char TOPICOS_PUBLICAR[] = " ";
 
 void setup()
 {
@@ -49,32 +48,33 @@ void loop()
   garantirWiFiConectado();
   loopMQTT();
 
-  if(enviarComandoPower != enviarComandoPowerAnterior)
-   if (enviarComandoPower)
-  {
-    debugInfo("projetor ligado");
-    projector.send(EPSON_CMD_POWER);
-  }
-  else
-  {
-    debugInfo("projetor desligado");
-    projector.send(EPSON_CMD_POWER);
-    delay(1000);
-    projector.send(EPSON_CMD_POWER);
-  }
+  if (enviarComandoPower != enviarComandoPowerAnterior)
+    if (enviarComandoPower)
+    {
+      debugInfo("projetor ligado");
+      projector.send(EPSON_CMD_POWER);
+    }
+    else
+    {
+      debugInfo("projetor desligado");
+      projector.send(EPSON_CMD_POWER);
+      delay(1000);
+      projector.send(EPSON_CMD_POWER);
+    }
   enviarComandoPowerAnterior = enviarComandoPower;
 
-  if(enviarComandoCongela != enviarComandoCongelaAnterior)
-  if(enviarComandoCongela)
-  {
-    debugInfo("projetor Congelado");
-    projector.send(EPSON_CMD_FREEZE);
-  }
-  else
-  {
-    debugInfo("projetor Descongelado");
-    projector.send(EPSON_CMD_FREEZE);
-  }
+  if (enviarComandoCongela != enviarComandoCongelaAnterior)
+    if (enviarComandoPower)
+      if (enviarComandoCongela)
+      {
+        debugInfo("projetor Congelado");
+        projector.send(EPSON_CMD_FREEZE);
+      }
+      else
+      {
+        debugInfo("projetor Descongelado");
+        projector.send(EPSON_CMD_FREEZE);
+      }
   enviarComandoCongelaAnterior = enviarComandoCongela;
 }
 
@@ -118,58 +118,32 @@ void tratarJsonComando(const String &mensagem)
   }
   if (doc["projetor"].is<JsonObject>())
   {
-    if (!doc["projetor"]["estadoProjetor"].is<bool>() || !doc["projetor"]["estadoCongela"].is<bool>())
+    if (!doc["projetor"]["estadoProjetor"].is<int>() || !doc["projetor"]["estadoCongela"].is<int>())
     {
       debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongela");
       return;
     }
     else
     {
-      bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
-      bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
+      bool estadoCongela = doc["projetor"]["estadoCongelamento"].as<int>();
+      bool estadoPower = doc["projetor"]["estadoProjetor"].as<int>();
 
       enviarComandoPower = estadoPower;
       enviarComandoCongela = estadoCongela;
-  }
-  }
-}
-void alterarEstadoPower(bool estadoPower)
-{
-  if (estadoPower)
-  {
-    debugInfo("projetor ligado");
-    projector.send(EPSON_CMD_POWER);
-  }
-  else
-  {
-    debugInfo("projetor desligado");
-    projector.send(EPSON_CMD_POWER);
-    delay(1000);
-    projector.send(EPSON_CMD_POWER);
-  }
-}
-void alterarEstadoCongela(bool estadoCongela)
-{
-  if (estadoCongela)
-  {
-    debugInfo("projetor congelado");
-  }
-  else
-  {
-    debugInfo("projetor descongelado");
+    }
   }
 }
 
 void enviarMensagemProDisplay()
 {
-  JsonDocument doc;
-  doc["timestamp"] = tempo.now();
-  doc["modulo"] = "Módulo Projetor";
+  JsonDocument doc2;
+  doc2["timestamp"] = tempo.now();
+  doc2["modulo"] = "Módulo Projetor";
 
   char buffer[200];
-  serializeJson(doc, buffer);
+  serializeJson(doc2, buffer);
 
   debugInfo("Enviando mensagem para Tópico: ");
-  debugInfo(TOPICO_COMANDO);
+  debugInfo(TOPICOS_PUBLICAR);
   debugInfo(buffer);
 }
