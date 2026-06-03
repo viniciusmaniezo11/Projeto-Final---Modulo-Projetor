@@ -8,13 +8,15 @@
 
 void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
+void alterarEstadoPower(bool estadoPower);
+void alterarEstadoCongela(bool estadoCongela);
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
-const char TOPICO_COMANDO[] = "senai134/viniciusM/esp32/comando";
+const char TOPICO_COMANDO[] = "senai134/equipe/bowser/devices/...";
 
 void setup()
 {
@@ -25,10 +27,6 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
-  projector.begin();
-
-  Serial.println("Comando enviado");
-  projector.send(EPSON_CMD_POWER);
 }
 
 void loop()
@@ -65,6 +63,11 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem)
 void tratarJsonComando(const String &mensagem)
 {
   JsonDocument doc;
+  static bool estadoPowerAnterior = 0;
+  static bool estadoCongelaAnterior = 0;
+  static bool teste = 0;
+  teste = !teste;
+  Serial.println(teste);
 
   DeserializationError erro = deserializeJson(doc, mensagem);
 
@@ -74,22 +77,47 @@ void tratarJsonComando(const String &mensagem)
     debugErro(erro.c_str());
     return;
   }
-  if (!doc["projetor"].is<JsonObject>())
+  if (doc["projetor"].is<JsonObject>())
   {
-    debugErro("Erro ao interpretar o JSON.");
-    return;
+    if (!doc["projetor"]["estadoProjetor"].is<bool>() || !doc["projetor"]["estadoCongela"].is<bool>())
+    {
+      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongela");
+      return;
+    }
+    else
+    {
+      bool estadoCongela = doc["projetor"]["estadoCongela"].as<bool>();
+      bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
+      
+      if(estadoPower != estadoPowerAnterior)
+      alterarEstadoPower(estadoPower);
+      estadoPowerAnterior = estadoPower;
+
+      if(estadoCongela != estadoCongelaAnterior)
+      alterarEstadoCongela(estadoCongela);
+      estadoCongelaAnterior = estadoCongela;
+  }
+  }
+}
+void alterarEstadoPower(bool estadoPower)
+{
+  if (estadoPower)
+  {
+    debugInfo("projetor ligado");
   }
   else
   {
-    if (doc["projetor"]["estadoProjetor"].is<bool>())
-    {
-      bool estadoPower = doc["projetor"]["estadoProjetor"].as<bool>();
-      debugInfo("Comando recebido");
-
-      if (estadoPower == 1)
-      {
-        projector.send(EPSON_CMD_POWER);
-      }
-    }
+    debugInfo("projetor desligado");
+  }
+}
+void alterarEstadoCongela(bool estadoCongela)
+{
+  if (estadoCongela)
+  {
+    debugInfo("projetor congelado");
+  }
+  else
+  {
+    debugInfo("projetor descongelado");
   }
 }
