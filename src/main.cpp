@@ -172,7 +172,7 @@ void tratarJsonComando(const String &mensagem)
   }
   if (doc["projetor"].is<JsonObject>())
   {
-    if (!doc["projetor"]["estadoProjetor"].is<int>() || !doc["projetor"]["estadoCongelamento"].is<int>())
+    if (!doc["projetor"]["estadoPower"].is<int>() || !doc["projetor"]["estadoCongelamento"].is<int>())
     {
       debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
       return;
@@ -180,7 +180,7 @@ void tratarJsonComando(const String &mensagem)
     else
     {
       bool estadoCongela = doc["projetor"]["estadoCongelamento"].as<int>();
-      bool estadoPower = doc["projetor"]["estadoProjetor"].as<int>();
+      bool estadoPower = doc["projetor"]["estadoPower"].as<int>();
 
       enviarComandoPower = estadoPower;
       enviarComandoCongela = estadoCongela;
@@ -202,7 +202,7 @@ void tratarJsonComando2(const String &mensagem)
   }
   if (doc3["projetor"].is<JsonObject>())
   {
-    if (!doc3["projetor"]["estadoProjetor"].is<int>() || !doc3["projetor"]["estadoCongelamento"].is<int>())
+    if (!doc3["projetor"]["estadoPower"].is<int>() || !doc3["projetor"]["estadoCongelamento"].is<int>())
     {
       debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
       return;
@@ -210,7 +210,7 @@ void tratarJsonComando2(const String &mensagem)
     else
     {
       bool estadoCongela = doc3["projetor"]["estadoCongelamento"].as<int>();
-      bool estadoPower = doc3["projetor"]["estadoProjetor"].as<int>();
+      bool estadoPower = doc3["projetor"]["estadoPower"].as<int>();
 
       enviarComandoPower2 = estadoPower;
       enviarComandoCongela2 = estadoCongela;
