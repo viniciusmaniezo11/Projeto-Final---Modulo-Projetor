@@ -14,7 +14,7 @@ const char *WIFI_SENHA = "info@134";
 
 const bool USAR_AWS_IOT = true;
 
-const char *AWS_IOT_CLIENT_ID = "bowser-123";
+const char *AWS_IOT_CLIENT_ID = "bowser-1345";
 
 const char AWS_CERT_CA[] PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
 MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF

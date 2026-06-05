@@ -134,16 +134,23 @@ void tratarJsonComando(const String &mensagem)
   }
 }
 
-void enviarMensagemProDisplay()
+void enviarMensagemProDisplay(int projetor)
 {
-  JsonDocument doc2;
-  doc2["timestamp"] = tempo.now();
-  doc2["modulo"] = "Módulo Projetor";
+  {
+    JsonDocument doc2;
+    doc2["timestamp"] = tempo.now();
 
-  char buffer[200];
-  serializeJson(doc2, buffer);
+    if(projetor == 1)
+    doc2["modulo"] = "Projetor 1";
 
-  debugInfo("Enviando mensagem para Tópico: ");
-  debugInfo(TOPICOS_PUBLICAR);
-  debugInfo(buffer);
+    else if(projetor == 2)
+    doc2["modulo"] = "Projetor 2";
+
+    char buffer[200];
+    serializeJson(doc2, buffer);
+
+    debugInfo("Enviando mensagem para Tópico: ");
+    debugInfo(TOPICOS_PUBLICAR);
+    debugInfo(buffer);
+  }
 }
