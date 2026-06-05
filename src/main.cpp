@@ -10,21 +10,24 @@
 
 void tratarJsonComando(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
-void enviarMensagemProDisplay();
+void enviarMensagemProDisplay(int projetor);
 
 const int PINO_PROJETOR_IR = 16;
 const int PINO_BOTAO_BOOT = 0;
 bool enviarComandoPower = 0;
-static bool enviarComandoPowerAnterior = 0;
+bool enviarComandoPowerAnterior = 0;
 bool enviarComandoCongela = 0;
-static bool enviarComandoCongelaAnterior = 0;
+bool enviarComandoCongelaAnterior = 0;
+int projetor = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
 Timezone tempo;
 
-const char TOPICO_COMANDO[] = "senai134/equipe/bowser/devices/…";
-const char TOPICOS_PUBLICAR[] = " ";
+const char TOPICO_COMANDO_SALA9[] = "senai134/shared/projeto/projetor09";
+const char TOPICO_COMANDO_SALA10[] = "senai134/shared/projeto/projetor10";
+const char TOPICOS_PUBLICAR[] = "senai134/shared/projeto/status";
+
 
 void setup()
 {
@@ -35,7 +38,7 @@ void setup()
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
-  enviarMensagemProDisplay();
+  enviarMensagemProDisplay(projetor);
   setInterval(3600);
   waitForSync();
   tempo.setLocation("America/Sao_Paulo");
@@ -53,6 +56,7 @@ void loop()
     {
       debugInfo("projetor ligado");
       projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
     }
     else
     {
@@ -60,6 +64,7 @@ void loop()
       projector.send(EPSON_CMD_POWER);
       delay(1000);
       projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
     }
   enviarComandoPowerAnterior = enviarComandoPower;
 
@@ -69,11 +74,13 @@ void loop()
       {
         debugInfo("projetor Congelado");
         projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
       }
       else
       {
         debugInfo("projetor Descongelado");
         projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
       }
   enviarComandoCongelaAnterior = enviarComandoCongela;
 }
@@ -93,11 +100,20 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem)
   debugInfo("Tópico: " + String(topico));
   debugInfo("Mensagem: " + mensagem);
 
-  if (strcmp(topico, TOPICO_COMANDO) == 0)
+    if (strcmp(topico, TOPICO_COMANDO_SALA9) == 0)
   {
     tratarJsonComando(mensagem);
+    projetor = 1;
     return;
   }
+
+    if (strcmp(topico, TOPICO_COMANDO_SALA10) == 1)
+  {
+    tratarJsonComando(mensagem);
+    projetor = 2;
+    return;
+  }
+  
 
   debugErro("Tópico não tratado: " + String(topico));
 }
