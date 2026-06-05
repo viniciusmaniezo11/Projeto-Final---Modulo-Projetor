@@ -14,7 +14,7 @@ const char *WIFI_SENHA = "info@134";
 
 const bool USAR_AWS_IOT = true;
 
-const char *AWS_IOT_CLIENT_ID = "esp-bowser-12345";
+const char *AWS_IOT_CLIENT_ID = "esp-bowser-1234567";
 
 const char AWS_CERT_CA[] PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
 MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -109,12 +109,13 @@ const bool MQTT_USAR_TLS = false; //* Modo de conexão sem segurança.
 const char MQTT_CERTIFICADO_CA[] PROGMEM = "";
 
 const char *TOPICOS_PUBLICAR[] = {
-    ""};
+    "senai134/shared/projeto/status"};
 
 const int TOTAL_TOPICOS_PUBLICAR = sizeof(TOPICOS_PUBLICAR) / sizeof(TOPICOS_PUBLICAR[0]);
 
 const char *TOPICOS_RECEBER[] = {
-    "senai134/equipe/bowser/devices/…"};
+    "senai134/shared/projeto/projetor09"
+    "senai134/shared/projeto/projetor10"};
 
 const int TOTAL_TOPICOS_RECEBER = sizeof(TOPICOS_RECEBER) / sizeof(TOPICOS_RECEBER[0]);
 
