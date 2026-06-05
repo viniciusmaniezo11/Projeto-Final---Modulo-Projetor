@@ -118,9 +118,9 @@ void tratarJsonComando(const String &mensagem)
   }
   if (doc["projetor"].is<JsonObject>())
   {
-    if (!doc["projetor"]["estadoProjetor"].is<int>() || !doc["projetor"]["estadoCongela"].is<int>())
+    if (!doc["projetor"]["estadoProjetor"].is<int>() || !doc["projetor"]["estadoCongelamento"].is<int>())
     {
-      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongela");
+      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
       return;
     }
     else
