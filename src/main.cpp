@@ -12,9 +12,10 @@ void tratarJsonComando(const String &mensagem);
 void tratarJsonComando2(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
 void enviarMensagemProDisplay(int projetor);
+void tratamentoControleProjetor1();
+void tratamentoControleProjetor2();
 
 const int PINO_PROJETOR_IR = 16;
-const int PINO_BOTAO_BOOT = 0;
 bool enviarComandoPower = 0;
 bool enviarComandoPowerAnterior = 0;
 bool enviarComandoCongela = 0;
@@ -36,14 +37,12 @@ const char TOPICOS_PUBLICAR[] = "senai134/shared/projeto/status";
 
 void setup()
 {
-  pinMode(PINO_BOTAO_BOOT, INPUT_PULLUP);
   Serial.begin(9600);
   configurarDebug();
   configurarMQTT();
   conectarWiFi();
   registrarCallbackMensagem(tratarMensagemRecebida);
   conectarMQTT();
-  enviarMensagemProDisplay(projetor);
   setInterval(3600);
   waitForSync();
   tempo.setLocation("America/Sao_Paulo");
@@ -56,72 +55,8 @@ void loop()
   garantirWiFiConectado();
   loopMQTT();
   events();
-
-  if (enviarComandoPower != enviarComandoPowerAnterior)
-    if (enviarComandoPower)
-    {
-      debugInfo("projetor ligado");
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-    else
-    {
-      debugInfo("projetor desligado");
-      projector.send(EPSON_CMD_POWER);
-      delay(1000);
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-  enviarComandoPowerAnterior = enviarComandoPower;
-
-  if (enviarComandoCongela != enviarComandoCongelaAnterior)
-    if (enviarComandoPower)
-      if (enviarComandoCongela)
-      {
-        debugInfo("projetor Congelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-      else
-      {
-        debugInfo("projetor Descongelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-  enviarComandoCongelaAnterior = enviarComandoCongela;
-
-  if (enviarComandoPower2 != enviarComandoPowerAnterior2)
-    if (enviarComandoPower2)
-    {
-      debugInfo("projetor ligado");
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-    else
-    {
-      debugInfo("projetor desligado");
-      projector.send(EPSON_CMD_POWER);
-      delay(1000);
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-  enviarComandoPowerAnterior2 = enviarComandoPower2;
-
-  if (enviarComandoCongela2 != enviarComandoCongelaAnterior2)
-    if (enviarComandoPower2)
-      if (enviarComandoCongela2)
-      {
-        debugInfo("projetor Congelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-      else
-      {
-        debugInfo("projetor Descongelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-  enviarComandoCongelaAnterior2 = enviarComandoCongela2;
+  tratamentoControleProjetor1();
+  tratamentoControleProjetor2();
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -179,11 +114,8 @@ void tratarJsonComando(const String &mensagem)
     }
     else
     {
-      bool estadoCongela = doc["projetor"]["estadoCongelamento"].as<int>();
-      bool estadoPower = doc["projetor"]["estadoPower"].as<int>();
-
-      enviarComandoPower = estadoPower;
-      enviarComandoCongela = estadoCongela;
+      enviarComandoPower = doc["projetor"]["estadoPower"].as<int>();
+      enviarComandoCongela = doc["projetor"]["estadoCongelamento"].as<int>();
     }
   }
 }
@@ -209,11 +141,9 @@ void tratarJsonComando2(const String &mensagem)
     }
     else
     {
-      bool estadoCongela = doc3["projetor"]["estadoCongelamento"].as<int>();
-      bool estadoPower = doc3["projetor"]["estadoPower"].as<int>();
 
-      enviarComandoPower2 = estadoPower;
-      enviarComandoCongela2 = estadoCongela;
+      enviarComandoPower2 = doc3["projetor"]["estadoPower"].as<int>();
+      enviarComandoCongela2 = doc3["projetor"]["estadoCongelamento"].as<int>();
     }
   }
 }
@@ -237,4 +167,76 @@ void enviarMensagemProDisplay(int projetor)
     debugInfo(TOPICOS_PUBLICAR);
     debugInfo(buffer);
   }
+}
+
+void tratamentoControleProjetor1()
+{
+  if (enviarComandoPower != enviarComandoPowerAnterior)
+    if (enviarComandoPower)
+    {
+      debugInfo("projetor ligado");
+      projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
+    }
+    else
+    {
+      debugInfo("projetor desligado");
+      projector.send(EPSON_CMD_POWER);
+      delay(1000);
+      projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
+    }
+  enviarComandoPowerAnterior = enviarComandoPower;
+
+  if (enviarComandoCongela != enviarComandoCongelaAnterior)
+    if (enviarComandoPower)
+      if (enviarComandoCongela)
+      {
+        debugInfo("projetor Congelado");
+        projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
+      }
+      else
+      {
+        debugInfo("projetor Descongelado");
+        projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
+      }
+  enviarComandoCongelaAnterior = enviarComandoCongela;
+}
+
+void tratamentoControleProjetor2()
+{
+  if (enviarComandoPower2 != enviarComandoPowerAnterior2)
+    if (enviarComandoPower2)
+    {
+      debugInfo("projetor ligado");
+      projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
+    }
+    else
+    {
+      debugInfo("projetor desligado");
+      projector.send(EPSON_CMD_POWER);
+      delay(1000);
+      projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
+    }
+  enviarComandoPowerAnterior2 = enviarComandoPower2;
+
+  if (enviarComandoCongela2 != enviarComandoCongelaAnterior2)
+    if (enviarComandoPower2)
+      if (enviarComandoCongela2)
+      {
+        debugInfo("projetor Congelado");
+        projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
+      }
+      else
+      {
+        debugInfo("projetor Descongelado");
+        projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
+      }
+  enviarComandoCongelaAnterior2 = enviarComandoCongela2;
 }
