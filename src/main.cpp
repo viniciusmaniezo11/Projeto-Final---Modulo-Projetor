@@ -9,6 +9,7 @@
 #include "WiFiManager.h"
 
 void tratarJsonComando(const String &mensagem);
+void tratarJsonComando2(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
 void enviarMensagemProDisplay(int projetor);
 
@@ -18,6 +19,10 @@ bool enviarComandoPower = 0;
 bool enviarComandoPowerAnterior = 0;
 bool enviarComandoCongela = 0;
 bool enviarComandoCongelaAnterior = 0;
+bool enviarComandoPower2 = 0;
+bool enviarComandoPowerAnterior2 = 0;
+bool enviarComandoCongela2 = 0;
+bool enviarComandoCongelaAnterior2 = 0;
 int projetor = 0;
 
 EpsonIR projector(PINO_PROJETOR_IR);
@@ -50,6 +55,7 @@ void loop()
   garantirMQTTConectado();
   garantirWiFiConectado();
   loopMQTT();
+  events();
 
   if (enviarComandoPower != enviarComandoPowerAnterior)
     if (enviarComandoPower)
@@ -83,6 +89,39 @@ void loop()
         enviarMensagemProDisplay(projetor);
       }
   enviarComandoCongelaAnterior = enviarComandoCongela;
+
+  if (enviarComandoPower2 != enviarComandoPowerAnterior2)
+    if (enviarComandoPower2)
+    {
+      debugInfo("projetor ligado");
+      projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
+    }
+    else
+    {
+      debugInfo("projetor desligado");
+      projector.send(EPSON_CMD_POWER);
+      delay(1000);
+      projector.send(EPSON_CMD_POWER);
+      enviarMensagemProDisplay(projetor);
+    }
+  enviarComandoPowerAnterior2 = enviarComandoPower2;
+
+  if (enviarComandoCongela2 != enviarComandoCongelaAnterior2)
+    if (enviarComandoPower2)
+      if (enviarComandoCongela2)
+      {
+        debugInfo("projetor Congelado");
+        projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
+      }
+      else
+      {
+        debugInfo("projetor Descongelado");
+        projector.send(EPSON_CMD_FREEZE);
+        enviarMensagemProDisplay(projetor);
+      }
+  enviarComandoCongelaAnterior2 = enviarComandoCongela2;
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -104,12 +143,13 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem)
   {
     tratarJsonComando(mensagem);
     projetor = 1;
+    debugInfo("Mensagem recebida");
     return;
   }
 
-    if (strcmp(topico, TOPICO_COMANDO_SALA10) == 1)
+    if (strcmp(topico, TOPICO_COMANDO_SALA10) == 0)
   {
-    tratarJsonComando(mensagem);
+    tratarJsonComando2(mensagem);
     projetor = 2;
     return;
   }
@@ -121,8 +161,6 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem)
 void tratarJsonComando(const String &mensagem)
 {
   JsonDocument doc;
-  static bool estadoPowerAnterior = 0;
-  static bool estadoCongelaAnterior = 0;
 
   DeserializationError erro = deserializeJson(doc, mensagem);
 
@@ -134,18 +172,48 @@ void tratarJsonComando(const String &mensagem)
   }
   if (doc["projetor"].is<JsonObject>())
   {
-    if (!doc["projetor"]["estadoProjetor"].is<int>() || !doc["projetor"]["estadoCongela"].is<int>())
+    if (!doc["projetor"]["estadoPower"].is<int>() || !doc["projetor"]["estadoCongelamento"].is<int>())
     {
-      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongela");
+      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
       return;
     }
     else
     {
       bool estadoCongela = doc["projetor"]["estadoCongelamento"].as<int>();
-      bool estadoPower = doc["projetor"]["estadoProjetor"].as<int>();
+      bool estadoPower = doc["projetor"]["estadoPower"].as<int>();
 
       enviarComandoPower = estadoPower;
       enviarComandoCongela = estadoCongela;
+    }
+  }
+}
+
+void tratarJsonComando2(const String &mensagem)
+{
+  JsonDocument doc3;
+
+  DeserializationError erro = deserializeJson(doc3, mensagem);
+
+  if (erro)
+  {
+    debugErro("Erro ao interpretar o JSON.");
+    debugErro(erro.c_str());
+    return;
+  }
+  if (doc3["projetor"].is<JsonObject>())
+  {
+    if (!doc3["projetor"]["estadoPower"].is<int>() || !doc3["projetor"]["estadoCongelamento"].is<int>())
+    {
+      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
+      return;
+    }
+    else
+    {
+      bool estadoCongela = doc3["projetor"]["estadoCongelamento"].as<int>();
+      bool estadoPower = doc3["projetor"]["estadoPower"].as<int>();
+
+      enviarComandoPower2 = estadoPower;
+      enviarComandoCongela2 = estadoCongela;
     }
   }
 }
