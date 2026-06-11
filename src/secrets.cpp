@@ -114,7 +114,7 @@ const char *TOPICOS_PUBLICAR[] = {
 const int TOTAL_TOPICOS_PUBLICAR = sizeof(TOPICOS_PUBLICAR) / sizeof(TOPICOS_PUBLICAR[0]);
 
 const char *TOPICOS_RECEBER[] = {
-    "senai134/shared/projeto/projetor09",
+    "senai134/shared/projeto/projetor10",
     "senai134/shared/projeto/projetor10"};
 
 const int TOTAL_TOPICOS_RECEBER = sizeof(TOPICOS_RECEBER) / sizeof(TOPICOS_RECEBER[0]);
