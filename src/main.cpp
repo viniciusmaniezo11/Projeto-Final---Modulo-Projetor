@@ -8,32 +8,38 @@
 #include "MqttManager.h"
 #include "WiFiManager.h"
 
-void tratarJsonComando(const String &mensagem);
+struct estadoProjetor
+{
+  bool estadoPower;
+  bool estadoPowerAnterior;
+  bool estadoCongela;
+  bool estadoCongelaAnterior;
+  int idProjetor;
+};
+
+estadoProjetor projetores[] =
+    {
+        {false, false, false, false, 1},
+        {false, false, false, false, 2},
+};
+
+void tratarJsonComando(estadoProjetor &p, const String &mensagem);
 void tratarJsonComando2(const String &mensagem);
 void tratarMensagemRecebida(const char *topico, const String &mensagem);
-void enviarMensagemProDisplay(int projetor);
-void tratamentoControleProjetor09();
-void tratamentoControleProjetor10();
+void tratamentoProjetores(estadoProjetor &p);
+void enviarMensagemProDisplay(const estadoProjetor &p);
 
 const int PINO_PROJETOR_IR = 16;
-bool ComandoPowerProjetor09 = 0;
-bool ComandoPowerAnteriorProjetor09 = 0;
-bool ComandoCongelaProjetor09 = 0;
-bool ComandoCongelaAnteriorProjetor09 = 0;
-bool ComandoPowerProjetor10 = 0;
-bool ComandoPowerAnteriorProjetor10 = 0;
-bool ComandoCongelaProjetor10 = 0;
-bool ComandoCongelaAnteriorProjetor10 = 0;
-int projetor = 0;
+
+const int numeroProjetores = sizeof(projetores) / sizeof(projetores[0]);
 
 EpsonIR projector(PINO_PROJETOR_IR);
 
 Timezone tempo;
 
-const char TOPICO_COMANDO_SALA9[] = "senai134/shared/projeto/projetor09";
-const char TOPICO_COMANDO_SALA10[] = "senai134/shared/projeto/projetor10";
-const char TOPICOS_PUBLICAR[] = "senai134/shared/projeto/status";
+const char TOPICOS_RECEBER[] = "senai134/shared/projeto/projetor";
 
+const char TOPICOS_PUBLICAR[] = "senai134/shared/projeto/status";
 
 void setup()
 {
@@ -55,8 +61,56 @@ void loop()
   garantirWiFiConectado();
   loopMQTT();
   events();
-  tratamentoControleProjetor09();
-  tratamentoControleProjetor10();
+
+  for (int i = 0; i < numeroProjetores; i++)
+  {
+    tratamentoProjetores(projetores[i]);
+  }
+}
+
+void tratarJsonComando(estadoProjetor &p, const String &mensagem)
+{
+  JsonDocument doc;
+
+  DeserializationError erro = deserializeJson(doc, mensagem);
+
+  if (erro)
+  {
+    debugErro("Erro ao interpretar o JSON.");
+    debugErro(erro.c_str());
+    return;
+  }
+
+  if (!doc["id"].is<int>())
+  {
+    debugErro("JSON INVÁLIDO. Use { id: 1+ }");
+    return;
+  }
+  int id = doc["id"].as<int>();
+
+  int indice = -1;
+
+  for (int i = 0; i < numeroProjetores; i++)
+  {
+    if (projetores[i].idProjetor == id)
+      indice = i;
+  }
+
+  if (indice == -1)
+  {
+    debugErro("Projetor não encontrado.");
+    return;
+  }
+
+  if (doc["power"].is<int>())
+    projetores[indice].estadoPower = doc["power"].as<int>();
+  else
+    debugErro("JSON INVÁLIDO. Use { power: 1 ou 0 }");
+
+  if (doc["freeze"].is<int>())
+    projetores[indice].estadoCongela = doc["freeze"].as<int>();
+  else
+    debugErro("JSON INVÁLIDO. Use { freeze: 1 ou 0 }");
 }
 
 void tratarMensagemRecebida(const char *topico, const String &mensagem)
@@ -74,91 +128,61 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem)
   debugInfo("Tópico: " + String(topico));
   debugInfo("Mensagem: " + mensagem);
 
-    if (strcmp(topico, TOPICO_COMANDO_SALA9) == 0)
+  for (int i = 0; i < numeroProjetores; i++)
   {
-    tratarJsonComando(mensagem);
-    projetor = 1;
-    debugInfo("Mensagem recebida");
-    return;
+    if (strcmp(topico, TOPICOS_RECEBER) == 0)
+    {
+      tratarJsonComando(projetores[i], mensagem);
+      return;
+    }
   }
-
-    if (strcmp(topico, TOPICO_COMANDO_SALA10) == 0)
-  {
-    tratarJsonComando2(mensagem);
-    projetor = 2;
-    return;
-  }
-  
 
   debugErro("Tópico não tratado: " + String(topico));
 }
 
-void tratarJsonComando(const String &mensagem)
+void tratamentoProjetores(estadoProjetor &p)
 {
-  JsonDocument doc;
-
-  DeserializationError erro = deserializeJson(doc, mensagem);
-
-  if (erro)
+  if (p.estadoPower != p.estadoPowerAnterior)
   {
-    debugErro("Erro ao interpretar o JSON.");
-    debugErro(erro.c_str());
-    return;
-  }
-  if (doc["projetor"].is<JsonObject>())
-  {
-    if (!doc["projetor"]["estadoPower"].is<int>() || !doc["projetor"]["estadoCongelamento"].is<int>())
+    if (p.estadoPower)
     {
-      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
-      return;
+      debugInfo("Projetor ligado");
+      projector.send(EPSON_CMD_POWER);
     }
     else
     {
-      ComandoPowerProjetor09 = doc["projetor"]["estadoPower"].as<int>();
-      ComandoCongelaProjetor09 = doc["projetor"]["estadoCongelamento"].as<int>();
+      debugInfo("Projetor desligado");
+      projector.send(EPSON_CMD_POWER);
+      delay(1000);
+      projector.send(EPSON_CMD_POWER);
     }
+    enviarMensagemProDisplay(p);
   }
-}
+  p.estadoPowerAnterior = p.estadoPower;
 
-void tratarJsonComando2(const String &mensagem)
-{
-  JsonDocument doc3;
-
-  DeserializationError erro = deserializeJson(doc3, mensagem);
-
-  if (erro)
+  if (p.estadoCongela != p.estadoCongelaAnterior)
   {
-    debugErro("Erro ao interpretar o JSON.");
-    debugErro(erro.c_str());
-    return;
-  }
-  if (doc3["projetor"].is<JsonObject>())
-  {
-    if (!doc3["projetor"]["estadoPower"].is<int>() || !doc3["projetor"]["estadoCongelamento"].is<int>())
+    if (p.estadoCongela)
     {
-      debugErro("JSON INVALIDO. use projetor.estadoProjetor, projetor.estadoCongelamento");
-      return;
+      debugInfo("Projetor Congelado");
+      projector.send(EPSON_CMD_FREEZE);
     }
     else
     {
-
-      ComandoPowerProjetor10 = doc3["projetor"]["estadoPower"].as<int>();
-      ComandoCongelaProjetor10 = doc3["projetor"]["estadoCongelamento"].as<int>();
+      debugInfo("Projetor Descongelado");
+      projector.send(EPSON_CMD_FREEZE);
     }
+    enviarMensagemProDisplay(p);
   }
+  p.estadoCongelaAnterior = p.estadoCongela;
 }
 
-void enviarMensagemProDisplay(int projetor)
+void enviarMensagemProDisplay(const estadoProjetor &p)
 {
   {
     JsonDocument doc2;
     doc2["timestamp"] = tempo.now();
-
-    if(projetor == 1)
-    doc2["modulo"] = "Projetor 1";
-
-    else if(projetor == 2)
-    doc2["modulo"] = "Projetor 2";
+    doc2["modulo"] = "Projetor:" + String(p.idProjetor);
 
     char buffer[200];
     serializeJson(doc2, buffer);
@@ -167,76 +191,4 @@ void enviarMensagemProDisplay(int projetor)
     debugInfo(TOPICOS_PUBLICAR);
     debugInfo(buffer);
   }
-}
-
-void tratamentoControleProjetor09()
-{
-  if (ComandoPowerProjetor09 != ComandoPowerAnteriorProjetor09)
-    if (ComandoPowerProjetor09)
-    {
-      debugInfo("projetor ligado");
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-    else
-    {
-      debugInfo("projetor desligado");
-      projector.send(EPSON_CMD_POWER);
-      delay(1000);
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-  ComandoPowerAnteriorProjetor09 = ComandoPowerProjetor09;
-
-  if (ComandoCongelaProjetor09 != ComandoCongelaAnteriorProjetor09)
-    if (ComandoPowerProjetor09)
-      if (ComandoCongelaProjetor09)
-      {
-        debugInfo("projetor Congelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-      else
-      {
-        debugInfo("projetor Descongelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-  ComandoCongelaAnteriorProjetor09 = ComandoCongelaProjetor09;
-}
-
-void tratamentoControleProjetor10()
-{
-  if (ComandoPowerProjetor10 != ComandoPowerAnteriorProjetor10)
-    if (ComandoPowerProjetor10)
-    {
-      debugInfo("projetor ligado");
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-    else
-    {
-      debugInfo("projetor desligado");
-      projector.send(EPSON_CMD_POWER);
-      delay(1000);
-      projector.send(EPSON_CMD_POWER);
-      enviarMensagemProDisplay(projetor);
-    }
-  ComandoPowerAnteriorProjetor10 = ComandoPowerProjetor10;
-
-  if (ComandoCongelaProjetor10 != ComandoCongelaAnteriorProjetor10)
-    if (ComandoPowerProjetor10)
-      if (ComandoCongelaProjetor10)
-      {
-        debugInfo("projetor Congelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-      else
-      {
-        debugInfo("projetor Descongelado");
-        projector.send(EPSON_CMD_FREEZE);
-        enviarMensagemProDisplay(projetor);
-      }
-  ComandoCongelaAnteriorProjetor10 = ComandoCongelaProjetor10;
 }
