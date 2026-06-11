@@ -147,7 +147,7 @@ void tratarJsonComando2(const String &mensagem)
     }
   }
 }
-
+//dfhuhrfurhurhugugrug
 void enviarMensagemProDisplay(int projetor)
 {
   {
