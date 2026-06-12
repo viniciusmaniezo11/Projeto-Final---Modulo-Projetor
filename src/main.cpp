@@ -87,6 +87,7 @@ void tratarMensagemRecebida(const char *topico, const String &mensagem)
 }
 
 void tratarJsonComando(const String &mensagem)
+
 {
   JsonDocument doc;
   DeserializationError erro = deserializeJson(doc, mensagem);
@@ -113,6 +114,7 @@ void tratarJsonComando(const String &mensagem)
       if (id == 1)
       {
         ComandoPowerProjetor09 = doc["power"].as<int>();
+
         if (ComandoPowerProjetor09 != ComandoPowerAnteriorProjetor09)
         {
           ComandoPowerAnteriorProjetor09 = ComandoPowerProjetor09;
@@ -143,6 +145,7 @@ void tratarJsonComando(const String &mensagem)
 
   if (doc.containsKey("freeze"))
   {
+
     if (doc["freeze"].is<int>())
     {
       if (id == 1)
@@ -163,7 +166,6 @@ void tratarJsonComando(const String &mensagem)
       if (id == 2)
       {
         ComandoCongelaProjetor10 = doc["freeze"].as<int>();
-
         if (ComandoCongelaProjetor10 != ComandoCongelaAnteriorProjetor10)
         {
           ComandoCongelaAnteriorProjetor10 = ComandoCongelaProjetor10;
