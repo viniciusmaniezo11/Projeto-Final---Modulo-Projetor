@@ -1,5 +1,5 @@
 
-//* Comando FREEZE //
+//* Bibliotecas //
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
@@ -20,17 +20,17 @@ void comandosProjetor10();
 const int PINO_PROJETOR_IR = 16;
 
 //* Variaveis Projetor 09 //
-bool comandoPowerProjetor09;
+bool comandoPowerProjetor09 = 0;
 int comandoPowerAnteriorProjetor09 = -1;
-bool comandoCongelaProjetor09;
+bool comandoCongelaProjetor09 = 0;
 int comandoCongelaAnteriorProjetor09 = -1;
 bool statusPower09 = false;
 bool statusFreeze09 = false;
 
 //* Variaveis Projetor 10 //
-bool comandoPowerProjetor10;
+bool comandoPowerProjetor10 = 0;
 int comandoPowerAnteriorProjetor10 = -1;
-bool comandoCongelaProjetor10;
+bool comandoCongelaProjetor10 = 0;
 int comandoCongelaAnteriorProjetor10 = -1;
 bool statusPower10 = false;
 bool statusFreeze10 = false;
