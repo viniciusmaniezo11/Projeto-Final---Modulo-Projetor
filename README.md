@@ -86,6 +86,95 @@ O comportamento do sistema muda dinamicamente com base na variável `nivelDebugA
 
 ### ⚙️ Configurações de Hardware Utilizadas
 * **`PINO_HABILITA_DEBUG_COMPLETO`**: Configurado como `INPUT_PULLUP`. Se estiver conectado ao `GND` ao ligar o ESP32, ativa o modo de depuração total. Caso contrário, inicia no nível padrão definido em `secrets.h`.
+# Gerenciamento de Debug
+
+Este módulo fornece um sistema simples e eficiente de logs de depuração (debug) para projetos baseados em Arduino/ESP32. Ele permite alternar dinamicamente entre dois níveis de verbosidade através da leitura de um pino físico (hardware) configurado como `INPUT_PULLUP`.
+
+## 🚀 Funcionalidades
+
+* **Níveis de Log:** Separação visual e lógica entre mensagens de **Erro** e mensagens de **Informação**.
+* **Controle por Hardware:** Ativação do modo de debug completo (`DEBUG_TUDO`) simplesmente aterrando um pino específico na inicialização.
+* **Funções Inline/Sem Linha:** Suporte para impressões contínuas na mesma linha (`Serial.print`) e com quebra de linha (`Serial.println`).
+
+---
+
+## 🛠️ Como Funciona a Lógica de Debug
+
+O comportamento do sistema é definido no momento em que a função `configurarDebug()` é chamada (geralmente dentro do `setup()` principal):
+
+| Estado do Pino (`PINO_HABILITA_DEBUG_COMPLETO`) | Nível de Debug Ativo | O que é exibido no Monitor Serial? |
+| :--- | :--- | :--- |
+| **HIGH** (Desconectado/3.3V) | `DEBUG_ERRO` | Apenas logs de erro críticos (`[ERRO]`). |
+| **LOW** (Conectado ao GND) | `DEBUG_TUDO` | Logs de erro **e** mensagens informativas (`[INFO]`). |
+
+---
+
+## 📂 Arquivos Necessários
+
+Para que este módulo funcione corretamente, o projeto deve conter os seguintes cabeçalhos (headers) definidos:
+
+### 1. `DebugManager.h`
+Deve conter as declarações das funções e as constantes dos níveis de debug. Exemplo:
+```cpp
+#ifndef DEBUG_MANAGER_H
+#define DEBUG_MANAGER_H
+
+#include <Arduino.h>
+
+#define DEBUG_ERRO 1
+#define DEBUG_TUDO 2
+#define DEBUG_NIVEL_INICIAL DEBUG_ERRO
+
+void configurarDebug();
+void debugErro(const String &mensagem);
+void debugErroSemLinha(const String &mensagem);
+void debugInfo(const String &mensagem);
+void debugInfoSemLinha(const String &mensagem);
+
+#endif
+
+# Conexão WiFi
+
+Este módulo é responsável por gerenciar o ciclo de vida da conexão sem fio (Wi-Fi) no ESP32. Ele configura o dispositivo em modo Estação (`WIFI_STA`), gerencia o processo de autenticação com limite de tentativas e oferece uma função de watchdog/reconexão para garantir que o dispositivo permaneça online.
+
+O módulo integra-se nativamente com o `DebugManager` para relatar o status da conexão diretamente no monitor serial.
+
+## 🚀 Funcionalidades
+
+* **Conexão Segura e Limitada:** Tenta se conectar à rede Wi-Fi por um limite máximo de vezes (evitando loops infinitos de travamento se a rede estiver fora do ar).
+* **Watchdog de Conexão (`garantirWiFiConectado`):** Verifica se a conexão caiu e tenta restabelecê-la automaticamente.
+* **Feedback Visual via Serial:** Exibe pontos de progresso (`...`) durante a tentativa de conexão e imprime o endereço IP obtido no sucesso.
+
+---
+
+## 🛠️ Como Funciona o Fluxo de Conexão
+
+1. **`conectarWiFi()`**:
+   * Define o ESP32 como Station (cliente de rede).
+   * Inicia a tentativa usando as credenciais `WIFI_SSID` e `WIFI_SENHA`.
+   * Aguarda a resposta por até **15 segundos** (30 tentativas com intervalos de 500ms).
+   * Se falhar, emite um aviso de erro via log.
+
+2. **`garantirWiFiConectado()`**:
+   * Ideal para ser chamado dentro do `loop()` principal. Ele valida a conexão e, caso tenha caído, aciona o fluxo de reconexão imediatamente.
+
+---
+
+## 📂 Arquivos Necessários
+
+Para o funcionamento correto, o projeto deve conter os seguintes cabeçalhos configurados:
+
+### 1. `secrets.h`
+Deve conter as credenciais de acesso da sua rede Wi-Fi:
+```cpp
+#ifndef SECRETS_H
+#define SECRETS_H
+
+#define WIFI_SSID "NOME_DA_SUA_REDE"
+#define WIFI_SENHA "SENHA_DA_SUA_REDE"
+
+#endif
+
 
 
 
