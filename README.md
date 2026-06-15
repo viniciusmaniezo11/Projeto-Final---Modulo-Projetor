@@ -16,12 +16,6 @@ Otimiza o tempo de início das aulas;
 
 ---
 
-# Estrutura de configuração 
-
-
-
-
-
 ## Conexão WiFi
 
     const char *WIFI_SSID = nome da rede;
@@ -115,7 +109,7 @@ Para que este módulo funcione corretamente, o projeto deve conter os seguintes 
 
 ### 1. `DebugManager.h`
 Deve conter as declarações das funções e as constantes dos níveis de debug. Exemplo:
-```cpp
+´´´cpp
 #ifndef DEBUG_MANAGER_H
 #define DEBUG_MANAGER_H
 
@@ -133,50 +127,45 @@ void debugInfoSemLinha(const String &mensagem);
 
 #endif
 
-# Conexão WiFi
+# 📹 Controle de Projetores Epson via MQTT e Infravermelho (IR)
 
-Este módulo é responsável por gerenciar o ciclo de vida da conexão sem fio (Wi-Fi) no ESP32. Ele configura o dispositivo em modo Estação (`WIFI_STA`), gerencia o processo de autenticação com limite de tentativas e oferece uma função de watchdog/reconexão para garantir que o dispositivo permaneça online.
+Este projeto consiste em um firmware desenvolvido em ambiente Arduino (compatível com ESP32 / ESP8266) voltado para a automação e gerenciamento remoto de projetores industriais da marca **Epson** (identificados como Projetor 09 e Projetor 10). 
 
-O módulo integra-se nativamente com o `DebugManager` para relatar o status da conexão diretamente no monitor serial.
+A comunicação externa é realizada através do protocolo **MQTT**, recebendo payloads formatados em **JSON** e convertendo-os em pulsos físicos de **Infravermelho (IR)**.
+
+---
 
 ## 🚀 Funcionalidades
 
-* **Conexão Segura e Limitada:** Tenta se conectar à rede Wi-Fi por um limite máximo de vezes (evitando loops infinitos de travamento se a rede estiver fora do ar).
-* **Watchdog de Conexão (`garantirWiFiConectado`):** Verifica se a conexão caiu e tenta restabelecê-la automaticamente.
-* **Feedback Visual via Serial:** Exibe pontos de progresso (`...`) durante a tentativa de conexão e imprime o endereço IP obtido no sucesso.
+- **Controle de Energia:** Ligar e desligar projetores remotamente.
+- **Controle de Transmissão:** Congelar (`Freeze`) e descongelar a imagem projetada.
+- **Filtro de Estado:** Evita disparos desnecessários de infravermelho caso o projetor já esteja no estado desejado.
+- **Confirmação Dupla Automática:** Implementação interna automática para o desligamento físico dos projetores Epson (que exigem dois pressionamentos do botão Power).
+- **Telemetria de Status:** Envio automático de confirmação para um painel/display contendo a estampa de tempo (*timestamp*) exata via sincronização NTP.
 
 ---
 
-## 🛠️ Como Funciona o Fluxo de Conexão
+## 🛠️ Arquitetura de Hardware e Pinagem
 
-1. **`conectarWiFi()`**:
-   * Define o ESP32 como Station (cliente de rede).
-   * Inicia a tentativa usando as credenciais `WIFI_SSID` e `WIFI_SENHA`.
-   * Aguarda a resposta por até **15 segundos** (30 tentativas com intervalos de 500ms).
-   * Se falhar, emite um aviso de erro via log.
-
-2. **`garantirWiFiConectado()`**:
-   * Ideal para ser chamado dentro do `loop()` principal. Ele valida a conexão e, caso tenha caído, aciona o fluxo de reconexão imediatamente.
+* **Microcontrolador:** ESP32 / ESP8266
+* **LED Emissor IR:** Conectado ao pino digital `GPIO 16`
+* **Interface de Debug:** Serial UART configurada a `9600 bps`
 
 ---
 
-## 📂 Arquivos Necessários
+## 🌐 Integração e Protocolo MQTT
 
-Para o funcionamento correto, o projeto deve conter os seguintes cabeçalhos configurados:
+O dispositivo se comunica através de dois tópicos principais estruturados dentro do servidor Broker:
 
-### 1. `secrets.h`
-Deve conter as credenciais de acesso da sua rede Wi-Fi:
-```cpp
-#ifndef SECRETS_H
-#define SECRETS_H
-
-#define WIFI_SSID "NOME_DA_SUA_REDE"
-#define WIFI_SENHA "SENHA_DA_SUA_REDE"
-
-#endif
-
-
-
+### 1. Tópico de Entrada (Comandos assinados)
+* **Tópico:** `senai134/shared/projeto/projetor`
+* **Exemplo de Payload (JSON):**
+```json
+{
+  "id": 1,
+  "power": 1,
+  "freeze": 0
+}
 
 
 
